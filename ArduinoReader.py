@@ -18,12 +18,12 @@ class ArduinoReader:
             print('Attention! Dummy Arduino Reader is used')
 
 
-    def get_data(self):
-        angle = 0
-
-        # TODO as soon as the button is pressed, read the angle values for 1/2 second and average over it
-        time.sleep(2)
-        return angle
+    # def get_data(self):
+    #     angle = 0
+    #
+    #     # TODO as soon as the button is pressed, read the angle values for 1/2 second and average over it
+    #     time.sleep(2)
+    #     return angle
 
 
     # read the data from the serial port for 2s and average it
@@ -42,6 +42,7 @@ class ArduinoReader:
         else:
             print('Dummy readout data')
             list = np.random.randint(0,135,10)
+            time.sleep(2)
 
         angle = sum(list) / len(list)
         print('Estimated Anlge: '+ str(angle))
