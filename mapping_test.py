@@ -1,10 +1,7 @@
 import argparse
 import sounddevice as sd
 import logging
-import AudioPlayer
-
-
-
+from AudioPlayer import AudioPlayer
 
 
 def main():
@@ -12,12 +9,14 @@ def main():
     fileToPlay = "audio\\white_noise_300.0ms_1000_bandwidth.wav"
 
     audio_player = AudioPlayer(fileToPlay)
-    trials = 4
+    trials = 1
 
     try:
-        for i in range(14):
-            logging.info("Testing Line: ", i + 1)
-            audio_player.set_output_line(i)
+        for i in range(13):
+            #i = 5
+            logging.info("Testing Line: "+ str(i + 1))
+
+            audio_player.set_output_line(13-i)
 
             for j in range(trials):
                 audio_player.play()
@@ -26,6 +25,9 @@ def main():
         parser.exit('\nInterrupted by user')
     except Exception as e:
         parser.exit(type(e).__name__ + ': ' + str(e))
+    except TypeError as e:
+        parser.exit(type(e).__name__ + ': ' + str(e))
+
     if status:
         parser.exit('Error during playback: ' + str(status))
 
@@ -41,7 +43,7 @@ if __name__ == '__main__':
     args, remaining = parser.parse_known_args()
     if args.list_devices:
         for i,dev in enumerate(sd.query_devices()):
-            if dev['max_output_channels'] == 2 and dev['name'].find('Fireface Analog') != -1 :
+            if dev['max_output_channels'] == 2 and dev['name'].find('Fireface Analog') != -1  and dev['name'].find('(11+12)') == -1  :
                 print(i,dev['name'])
         parser.exit(0)
     parser = argparse.ArgumentParser(
