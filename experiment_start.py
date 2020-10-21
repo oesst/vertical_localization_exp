@@ -7,7 +7,7 @@ import csv
 import sys
 import time
 import random as rd
-from colorama import init, deinit, Fore, Style
+from colorama import init, deinit, Fore, Style, Back
 from AudioPlayer import AudioPlayer
 from ArduinoReader import ArduinoReader
 sound_folder = Path('audio')
@@ -18,7 +18,8 @@ white_noise_sound = sound_folder / 'white_noise_300.0ms_1000_bandwidth.wav'
 
 n_speakers = 13
 
-dummy_trial = True
+dummy_audio_player = True
+dummy_arduino_reader = False
 
 
 def clear_screen():
@@ -58,7 +59,7 @@ def test_deafness(test_trials=5):
 
     # reduced the volume if the sound was heared
     while sound_was_heard:
-        audio_player = AudioPlayer(deafness_test_sound, dummy=dummy_trial)
+        audio_player = AudioPlayer(deafness_test_sound.as_posix(), dummy=dummy_audio_player)
 
         # set output line to speaker in the middle
         audio_player.set_output_line(8)
@@ -145,9 +146,9 @@ def main():
         print(Fore.GREEN + 'All set. Experiments is about to start...' +  Style.RESET_ALL)
 
         # Initialize AudioPlayer
-        audio_player = AudioPlayer(dummy=dummy_trial)
+        audio_player = AudioPlayer(dummy=dummy_audio_player)
         # Initialize Arduino Reader
-        arduino_reader = ArduinoReader(dummy=dummy_trial)
+        arduino_reader = ArduinoReader(dummy=dummy_arduino_reader)
 
         # Zeroing of the angle encoder
         print(Fore.RED + 'Confirm that the handle is in zero position (pointing downwards)' + Style.RESET_ALL)
@@ -155,8 +156,9 @@ def main():
         arduino_reader.zeroing()
 
         clear_screen()
-        print(Fore.RED + 'Experiment is starting NOW' + Style.RESET_ALL)
-
+        print(Back.RED + '###### Experiment is starting NOW ######' + Style.RESET_ALL)
+        print(Back.RED + '########################################' + Style.RESET_ALL)
+        print(Back.RED + '########################################' + Style.RESET_ALL)
 
         for i_cond, cond in enumerate(conditions):
 
@@ -170,10 +172,10 @@ def main():
 
             for i_trial, sound_type in enumerate(sound_order):
                 if sound_type == 1:
-                    audio_player.set_audio_file(rippled_noise_sound)
+                    audio_player.set_audio_file(rippled_noise_sound.as_posix())
                     sound_type_name = 'rippled'
                 else:
-                    audio_player.set_audio_file(white_noise_sound)
+                    audio_player.set_audio_file(white_noise_sound.as_posix())
                     sound_type_name = 'white'
 
                 # set output line to speaker in the middle
@@ -185,7 +187,9 @@ def main():
                 ts = datetime.now()
 
                 # get participant response
+                print('Waiting for participant response...')
                 user_estimate = arduino_reader.get_data()
+                # print('Response is : '+ str(user_estimate))
 
                 # calculate reaction time
                 reaction_time = (datetime.now() - ts).total_seconds()
@@ -203,6 +207,7 @@ def main():
 
                 res_file_writer.writerow(result_item)
 
+                # wait some time until playing the next sound
                 time.sleep(2)
 
 
