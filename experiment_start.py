@@ -16,10 +16,13 @@ deafness_test_sound = sound_folder / 'white_noise_300.0ms_1000_bandwidth.wav'
 rippled_noise_sound = sound_folder / 'rippled_noise_300.0ms_1000_bandwidth.wav'
 white_noise_sound = sound_folder / 'white_noise_300.0ms_1000_bandwidth.wav'
 
-n_speakers = 13
+n_speakers = 12
 
-dummy_audio_player = True
+dummy_audio_player = False
 dummy_arduino_reader = False
+
+#ARDUINO_PORT = '/dev/ttyUSB0' # Linux
+ARDUINO_PORT = 'COM4' # Windows
 
 
 def clear_screen():
@@ -43,7 +46,7 @@ def create_rand_balanced_order(n_items=2, n_trials=64):
         chosenItem = availableItems[i]
 
         # add to the returnList
-        returnList.append(chosenItem + 1)
+        returnList.append(chosenItem)
 
         # update channelInfo
         trialsAlreadyAssignedToItem[chosenItem] += 1
@@ -62,7 +65,7 @@ def test_deafness(test_trials=5):
         audio_player = AudioPlayer(deafness_test_sound.as_posix(), dummy=dummy_audio_player)
 
         # set output line to speaker in the middle
-        audio_player.set_output_line(8)
+        audio_player.set_output_line(5)
 
         for j in range(test_trials):
             audio_player.play()
@@ -148,7 +151,7 @@ def main():
         # Initialize AudioPlayer
         audio_player = AudioPlayer(dummy=dummy_audio_player)
         # Initialize Arduino Reader
-        arduino_reader = ArduinoReader(dummy=dummy_arduino_reader)
+        arduino_reader = ArduinoReader(port=ARDUINO_PORT,dummy=dummy_arduino_reader)
 
         # Zeroing of the angle encoder
         print(Fore.RED + 'Confirm that the handle is in zero position (pointing downwards)' + Style.RESET_ALL)
@@ -169,6 +172,9 @@ def main():
 
             # create a randomized  but balanced list so that each speaker is used equally often
             speaker_order = create_rand_balanced_order(n_items=n_speakers, n_trials=n_trials)
+
+            #print(speaker_order)
+            #exit(0)
 
             for i_trial, sound_type in enumerate(sound_order):
                 if sound_type == 1:
@@ -208,7 +214,10 @@ def main():
                 res_file_writer.writerow(result_item)
 
                 # wait some time until playing the next sound
-                time.sleep(2)
+                time.sleep(1)
+
+            print("First Condition is finished. Let participant remove headset")
+            input()
 
 
 if __name__ == '__main__':

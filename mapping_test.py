@@ -9,14 +9,15 @@ def main():
     fileToPlay = "audio\\white_noise_300.0ms_1000_bandwidth.wav"
 
     audio_player = AudioPlayer(fileToPlay)
-    trials = 1
+    trials = 5
 
     try:
-        for i in range(13):
+        for i in range(1):
             #i = 5
             logging.info("Testing Line: "+ str(i + 1))
 
-            audio_player.set_output_line(13-i)
+            #audio_player.set_output_line(13-i)
+            audio_player.set_output_line(12) # output line 12 is speaker at +90 deg
 
             for j in range(trials):
                 audio_player.play()
