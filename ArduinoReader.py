@@ -22,8 +22,9 @@ class ArduinoReader:
     def get_data(self):
 
         # flush the serial buffer so that repeated butten presses are ignored
-        self.ser.flushInput()
         if not self.dummy:
+            self.ser.flushInput()
+
             list = []
             # Arduino sends 100 values. So read 100 values ....
             for i in range(100):
