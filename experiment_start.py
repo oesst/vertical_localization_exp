@@ -14,15 +14,19 @@ sound_folder = Path('audio')
 
 deafness_test_sound = sound_folder / 'white_noise_300.0ms_1000_bandwidth.wav'
 rippled_noise_sound = sound_folder / 'rippled_noise_300.0ms_1000_bandwidth.wav'
-white_noise_sound = sound_folder / 'white_noise_300.0ms_1000_bandwidth.wav'
+white_noise_sound   = sound_folder / 'white_noise_300.0ms_1000_bandwidth.wav'
 
-n_speakers = 12
+# number of speakers, starting from bottom
+n_speakers = 10
+# trials per condition
+n_trials = 200
+
 
 dummy_audio_player = False
 dummy_arduino_reader = False
 
 #ARDUINO_PORT = '/dev/ttyUSB0' # Linux
-ARDUINO_PORT = 'COM4' # Windows
+ARDUINO_PORT = 'COM3' # Windows
 
 
 def clear_screen():
@@ -100,8 +104,7 @@ def main():
 
     # set number of trials per condition. each sound is then played n_trials/2
     # make sure this numer is divideable by 2 (sounds) and 13 (number of speakers)
-    n_trials = 78
-    assert(n_trials % 2 == 0 and n_trials % 13 == 0)
+    assert(n_trials % 2 == 0 and n_trials % n_speakers == 0)
 
     # ask for user id
     print(Fore.GREEN + 'Please enter participant id: ' + Style.RESET_ALL)
@@ -119,12 +122,12 @@ def main():
         # add headers
         res_file_writer.writerow([
             'trial',  # Trial
-            'line number',  # line number (speaker number)
-            'user estimate',  # perceived elevation in degree
-            'sound type',  # type of the sound
+            'line_number',  # line number (speaker number)
+            'user_estimate',  # perceived elevation in degree
+            'sound_type',  # type of the sound
             'condition',  # condition
-            'reaction time',  # time for participant to respond
-            'user id'   # id of the user
+            'reaction_time',  # time for participant to respond
+            'user_id'   # id of the user
         ])
 
         # # create empty dataframe with keys
@@ -145,7 +148,11 @@ def main():
         print(Fore.RED + 'Make sure participant is wearing ear plugs and headphones' + Style.RESET_ALL)
         input()
         test_deafness()
+        clear_screen()
+        print(Fore.RED + 'Tell participant to remove headphone from leading ear' +  Style.RESET_ALL)
 
+        input()
+        clear_screen
         print(Fore.GREEN + 'All set. Experiments is about to start...' +  Style.RESET_ALL)
 
         # Initialize AudioPlayer
@@ -162,6 +169,11 @@ def main():
         print(Back.RED + '###### Experiment is starting NOW ######' + Style.RESET_ALL)
         print(Back.RED + '########################################' + Style.RESET_ALL)
         print(Back.RED + '########################################' + Style.RESET_ALL)
+
+        print(Back.RED + 'Participant starts the experiment by pressing the button' + Style.RESET_ALL)
+
+        arduino_reader.get_data()
+
 
         for i_cond, cond in enumerate(conditions):
 

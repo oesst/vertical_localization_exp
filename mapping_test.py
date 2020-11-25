@@ -7,17 +7,16 @@ from AudioPlayer import AudioPlayer
 def main():
 
     fileToPlay = "audio\\white_noise_300.0ms_1000_bandwidth.wav"
-
+    #fileToPlay = "audio\\wn_long.wav"
     audio_player = AudioPlayer(fileToPlay)
-    trials = 5
+    trials = 1
 
     try:
-        for i in range(1):
+        for i in range(13):
             #i = 5
             logging.info("Testing Line: "+ str(i + 1))
-
-            #audio_player.set_output_line(13-i)
-            audio_player.set_output_line(12) # output line 12 is speaker at +90 deg
+            audio_player.set_output_line(12-i)
+            #audio_player.set_output_line(9)
 
             for j in range(trials):
                 audio_player.play()
@@ -29,8 +28,6 @@ def main():
     except TypeError as e:
         parser.exit(type(e).__name__ + ': ' + str(e))
 
-    if status:
-        parser.exit('Error during playback: ' + str(status))
 
 
 
