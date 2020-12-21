@@ -100,7 +100,7 @@ def main():
     # print(type(results_path))
 
     # We have 2 conditions (monaural, binaural). In each condition, two different sounds are randomly played
-    conditions = ['mono', 'bin']
+    conditions = ['bin', 'mono']
 
     # set number of trials per condition. each sound is then played n_trials/2
     # make sure this numer is divideable by 2 (sounds) and 13 (number of speakers)
@@ -150,9 +150,9 @@ def main():
         test_deafness()
         clear_screen()
         print(Fore.RED + 'Tell participant to remove headphone from leading ear' +  Style.RESET_ALL)
-
         input()
-        clear_screen
+
+        clear_screen()
         print(Fore.GREEN + 'All set. Experiments is about to start...' +  Style.RESET_ALL)
 
         # Initialize AudioPlayer
@@ -170,14 +170,18 @@ def main():
         print(Back.RED + '########################################' + Style.RESET_ALL)
         print(Back.RED + '########################################' + Style.RESET_ALL)
 
-        print(Back.RED + 'Participant starts the experiment by pressing the button' + Style.RESET_ALL)
+        # print(Back.RED + 'Participant starts the experiment by pressing the button' + Style.RESET_ALL)
 
-        arduino_reader.get_data()
+        # arduino_reader.get_data()
 
 
         for i_cond, cond in enumerate(conditions):
 
             print(Fore.GREEN + 'The following condition is tested: ' + cond + '\n' + Style.RESET_ALL)
+
+            print(Fore.GREEN + 'Participant starts experiment by pressing the button \n' + Style.RESET_ALL)
+
+            arduino_reader.get_data()
 
             # create a randomized  but balanced list so that each sound is played equally often
             sound_order = create_rand_balanced_order(n_items=2, n_trials=n_trials)
@@ -230,6 +234,14 @@ def main():
 
             print("First Condition is finished. Let participant remove headset")
             input()
+
+
+            # Adjust the level of the sound so that the participant does not hear anything with both ears occluded.
+            print(Fore.RED + 'Make sure participant is wearing ear plugs and headphones' + Style.RESET_ALL)
+            input()
+            test_deafness()
+            clear_screen()
+            print(Fore.RED + 'Tell participant to remove headphone from leading ear' +  Style.RESET_ALL)
 
 
 if __name__ == '__main__':
