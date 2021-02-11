@@ -183,16 +183,19 @@ def main():
 
             arduino_reader.get_data()
 
-            # create a randomized  but balanced list so that each sound is played equally often
-            sound_order = create_rand_balanced_order(n_items=2, n_trials=n_trials)
+            # create tupels of all speakers with all sound types 10 speakers * 2 sounds = 20 tuples
+            stimulus_sequence = [(i, j) for i in np.arange(n_speakers) for j in np.arange(2)]
 
-            # create a randomized  but balanced list so that each speaker is used equally often
-            speaker_order = create_rand_balanced_order(n_items=n_speakers, n_trials=n_trials)
+            random_sequence = create_rand_balanced_order(n_items=n_speakers * 2, n_trials=n_trials)
 
-            #print(speaker_order)
-            #exit(0)
+            # print(speaker_order)
+            # exit(0)
 
-            for i_trial, sound_type in enumerate(sound_order):
+            for i_trial, i_tuple in enumerate(random_sequence):
+
+                # decode the stimulus sequence
+                num_speaker = stimulus_sequence[i_tuple][0]
+                sound_type = stimulus_sequence[i_tuple][1]
                 if sound_type == 1:
                     audio_player.set_audio_file(rippled_noise_sound.as_posix())
                     sound_type_name = 'rippled'
@@ -201,7 +204,6 @@ def main():
                     sound_type_name = 'white'
 
                 # set output line to speaker in the middle
-                num_speaker = speaker_order[i_trial]
                 audio_player.set_output_line(num_speaker)
                 audio_player.play()
 
