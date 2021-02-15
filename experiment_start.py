@@ -1,26 +1,32 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 import logging
 from datetime import datetime
 import csv
-import sys
 import time
 import random as rd
 from colorama import init, deinit, Fore, Style, Back
 from AudioPlayer import AudioPlayer
 from ArduinoReader import ArduinoReader
 from SyncedRecorder import SyncedRecorder
+
+import sounddevice as sd
+import soundfile as sf
+
+
 sound_folder = Path('audio')
 
 rippled_noise_sound = sound_folder / 'inear_rippled_noise_400.0ms_1000_bandwidth.wav'
 white_noise_sound = sound_folder / 'inear_white_noise_400.0ms_1000_bandwidth.wav'
 
 # number of speakers, starting from bottom
-n_speakers = 10
+N_SPEAKERS = 10
 # trials per condition
-n_trials = 200
+N_TRIALS = 200
 
+
+# Offset with which recording time is extended (in seconds)
+RECORDING_DURATION_OFFSET = 0.100
 
 dummy_audio_player = True
 dummy_arduino_reader = True
@@ -67,8 +73,13 @@ def record_sounds(n_speakers, audio_player, results_path, user_id):
 
     # initialize recorder
     recorder = SyncedRecorder()
+
     # wait for initialization
-    time.sleep(2)
+    print("Waiting 5s for initialization of microphones")
+    time.sleep(5)
+    # Dummy recording to prevent weird first sound recordings
+    recorder.record()
+    time.sleep(1)
 
     # create tupels of all speakers with all sound types 10 speakers * 2 sounds = 20 tuples
     # (num_speaker, noise_type)
@@ -98,10 +109,12 @@ def record_sounds(n_speakers, audio_player, results_path, user_id):
         # recording at that position
         audio_player.set_output_line(num_speaker)
 
-        recorder.record(audio_player)
-        resultsFile = 'userid_' + str(user_id) + '_speakerNum_' + str(num_speaker) + '_soundType_' + sound_type_name + '_'
+        recorder.record(audio_player, recording_duration_offset=RECORDING_DURATION_OFFSET)
+        resultsFile = 'userid_' + str(user_id) + '_speakerNum_' + str(num_speaker) + '_soundType_' + sound_type_name
         recorder.save((recording_data_path / resultsFile).as_posix())
         recorder.finish()
+
+    return recording_data_path
 
 
 def main():
@@ -116,9 +129,9 @@ def main():
     # We have 2 conditions (monaural, binaural). In each condition, two different sounds are randomly played
     conditions = ['mono', 'bin']
 
-    # set number of trials per condition. each sound is then played n_trials/2
+    # set number of trials per condition. each sound is then played N_TRIALS/2
     # make sure this numer is divideable by 2 (sounds) and 13 (number of speakers)
-    assert(n_trials % 2 == 0 and n_trials % n_speakers == 0)
+    assert(N_TRIALS % 2 == 0 and N_TRIALS % N_SPEAKERS == 0)
 
     # ask for user id
     print(Fore.GREEN + 'Please enter participant id: ' + Style.RESET_ALL)
@@ -129,10 +142,13 @@ def main():
     resultsStoredIn = results_path / resultsFile
 
     # JUST TESTING #
-    audio_player = AudioPlayer(dummy=dummy_audio_player)
-    record_sounds(n_speakers, audio_player=audio_player, results_path=results_path, user_id=user_id)
+    # audio_player = AudioPlayer(dummy=dummy_audio_player)
+    # recording_data_path = record_sounds(N_SPEAKERS, audio_player=audio_player, results_path=results_path, user_id=user_id)
+    #    exit(0)
+    # file_to_play = '/home/oesst/ownCloud/PhD/Code/Python/vertical_localization_exp/results_inear_exp/participant_999/userid_999_speakerNum_0_soundType_rippled_.wav'
+    # data, fs = sf.read(file_to_play, dtype='int16')
+    # sd.play(data, fs)
 
-    exit(0)
 
     with open(resultsStoredIn.as_posix(), mode='w', newline='') as resFile:
 
@@ -162,6 +178,12 @@ def main():
         #     'user id': []
         # })
 
+        # Ask for dominant ear
+        # left channel is 0, right channel is 1
+        print(Fore.GREEN + 'Which is the dominat ear (0 for right, 1 for left): ' + Style.RESET_ALL)
+        dominant_ear = int(input())
+        assert(dominant_ear == 0 or dominant_ear == 1)
+
         ### Monaural condition is the first ###
 
         clear_screen()
@@ -181,10 +203,26 @@ def main():
         print(Back.RED + '###### Experiment is starting NOW ######' + Style.RESET_ALL)
         print(Back.RED + '########################################' + Style.RESET_ALL)
         print(Back.RED + '########################################' + Style.RESET_ALL)
+        print(Back.RED + '----------------------------------------' + Style.RESET_ALL)
+        print(Back.RED + 'Recording of sounds will start whne participant presses button once' + Style.RESET_ALL)
 
-        # print(Back.RED + 'Participant starts the experiment by pressing the button' + Style.RESET_ALL)
+        arduino_reader.get_data()
 
-        # arduino_reader.get_data()
+        audio_player = AudioPlayer(dummy=dummy_audio_player)
+        recording_data_path = record_sounds(N_SPEAKERS, audio_player=audio_player, results_path=results_path, user_id=user_id)
+
+        clear_screen()
+        print(Back.GREEN + 'Recording successful!' + Style.RESET_ALL)
+        input()
+        clear_screen()
+        print(Back.RED + 'Provide participant with headphones.' + Style.RESET_ALL)
+        print(Back.RED + 'Make sure that left and right headphones are place correctly.' + Style.RESET_ALL)
+        input()
+        clear_screen()
+        print(Back.RED + '###### Experiment is starting NOW ######' + Style.RESET_ALL)
+        print(Back.RED + '########################################' + Style.RESET_ALL)
+        print(Back.RED + '########################################' + Style.RESET_ALL)
+        print(Back.RED + '----------------------------------------' + Style.RESET_ALL)
 
         for i_cond, cond in enumerate(conditions):
 
@@ -196,16 +234,16 @@ def main():
 
             ##### OLD RANDOM ORDER CREATION - WRONG #####
             # create a randomized  but balanced list so that each sound is played equally often
-            # sound_order = create_rand_balanced_order(n_items=2, n_trials=n_trials)
+            # sound_order = create_rand_balanced_order(n_items=2, N_TRIALS=N_TRIALS)
             #
             # # create a randomized  but balanced list so that each speaker is used equally often
-            # speaker_order = create_rand_balanced_order(n_items=n_speakers, n_trials=n_trials)
+            # speaker_order = create_rand_balanced_order(n_items=N_SPEAKERS, N_TRIALS=N_TRIALS)
             ############################################
 
             # create tupels of all speakers with all sound types 10 speakers * 2 sounds = 20 tuples
-            stimulus_sequence = [(i, j) for i in np.arange(n_speakers) for j in np.arange(2)]
+            stimulus_sequence = [(i, j) for i in np.arange(N_SPEAKERS) for j in np.arange(2)]
 
-            random_sequence = create_rand_balanced_order(n_items=n_speakers * 2, n_trials=n_trials)
+            random_sequence = create_rand_balanced_order(n_items=N_SPEAKERS * 2, n_trials=N_TRIALS)
 
             # print(speaker_order)
             # exit(0)
@@ -220,9 +258,25 @@ def main():
                 else:
                     sound_type_name = 'white'
 
+                ###### TODO Play recorded sound here ######
+                file_name = 'userid_' + str(user_id) + '_speakerNum_' + str(num_speaker) + '_soundType_' + sound_type_name + '.wav'
+                file_to_play = recording_data_path / file_name
 
-                # TODO 
-                ###### Play recorded sound here ######
+                # check which condition we are in
+
+                # if cond == 'bin':
+                #     num_channels = 2
+
+                # Extract data and sampling rate from file
+                data, fs = sf.read(file_to_play, dtype='int16')
+
+                # remove one side in mono condition
+                if cond == 'mono':
+                    # left channel is 0, right channel is 1
+                    data[:, dominant_ear] = 0
+
+                sd.play(data, fs)
+                # status = sd.wait()  # Wait until file is done playing
 
                 # start measuring the time
                 ts = datetime.now()
@@ -249,17 +303,10 @@ def main():
                 res_file_writer.writerow(result_item)
 
                 # wait some time until playing the next sound
-                time.sleep(1)
+                time.sleep(0.5)
 
-            print("First Condition is finished. Let participant remove headset")
-            input()
+            print("First Condition is finished.")
 
-            # Adjust the level of the sound so that the participant does not hear anything with both ears occluded.
-            print(Fore.RED + 'Make sure participant is wearing ear plugs and headphones' + Style.RESET_ALL)
-            input()
-            test_deafness()
-            clear_screen()
-            print(Fore.RED + 'Tell participant to remove headphone from leading ear' + Style.RESET_ALL)
 
 
 if __name__ == '__main__':
