@@ -31,14 +31,14 @@ class AudioPlayer():
             self.logger.warning('Attention! Dummy Audio Player is used!!')
 
     # play the previouly set sound on the output device and channel
-
-    def play(self):
+    def play(self, async_rec=False):
         if not self.dummy:
             self.logger.info('DeviceNumber: ' + str(self.output_device) + '    ChannelNumber: ' +
                              str(self.output_channel) + '    Name: ' + str(self.devices[self.output_device]['name']))
             sd.play(self.audio_data, self.fs, mapping=self.output_channel, device=self.output_device)
-            status = sd.wait()
-            sd.stop()
+            if not async_rec:
+                status = sd.wait()
+                sd.stop()
 
     # sets the file to play
     def set_audio_file(self, file_to_play):
