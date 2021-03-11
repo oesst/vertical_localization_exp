@@ -73,7 +73,7 @@ class SyncedRecorder:
 
         if audio_player:
             print('Using given audio_player for playback')
-            audio_player.play()
+            audio_player.play(async_rec=True)
 
 
         print('Recording ...')

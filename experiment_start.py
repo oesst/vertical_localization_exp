@@ -22,14 +22,14 @@ white_noise_sound = sound_folder / 'inear_white_noise_400.0ms_1000_bandwidth.wav
 # number of speakers, starting from bottom
 N_SPEAKERS = 10
 # trials per condition
-N_TRIALS = 200
+N_TRIALS = 100
 
 
 # Offset with which recording time is extended (in seconds)
 RECORDING_DURATION_OFFSET = 0.100
 
-dummy_audio_player = True
-dummy_arduino_reader = True
+dummy_audio_player = False
+dummy_arduino_reader = False
 
 # ARDUINO_PORT = '/dev/ttyUSB0' # Linux
 ARDUINO_PORT = 'COM3'  # Windows
@@ -195,7 +195,7 @@ def main():
         arduino_reader = ArduinoReader(port=ARDUINO_PORT, dummy=dummy_arduino_reader)
 
         # Zeroing of the angle encoder
-        print(Fore.RED + 'Confirm that the handle is in zero position (pointing downwards)' + Style.RESET_ALL)
+        print(Fore.RED + 'Confirm that the handle is in zero position (pointing upwards)' + Style.RESET_ALL)
         input()
         arduino_reader.zeroing()
 
@@ -209,8 +209,8 @@ def main():
         arduino_reader.get_data()
 
         audio_player = AudioPlayer(dummy=dummy_audio_player)
-        recording_data_path = record_sounds(N_SPEAKERS, audio_player=audio_player, results_path=results_path, user_id=user_id)
-
+        #recording_data_path = record_sounds(N_SPEAKERS, audio_player=audio_player, results_path=results_path, user_id=user_id)
+        recording_data_path = results_path / ('participant_98')
         clear_screen()
         print(Back.GREEN + 'Recording successful!' + Style.RESET_ALL)
         input()
@@ -258,7 +258,7 @@ def main():
                 else:
                     sound_type_name = 'white'
 
-                ###### TODO Play recorded sound here ######
+                ###### Play recorded sound here ######
                 file_name = 'userid_' + str(user_id) + '_speakerNum_' + str(num_speaker) + '_soundType_' + sound_type_name + '.wav'
                 file_to_play = recording_data_path / file_name
 

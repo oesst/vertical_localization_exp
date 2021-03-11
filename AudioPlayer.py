@@ -31,14 +31,14 @@ class AudioPlayer():
             self.logger.warning('Attention! Dummy Audio Player is used!!')
 
     # play the previouly set sound on the output device and channel
-
-    def play(self):
+    def play(self, async_rec=False):
         if not self.dummy:
             self.logger.info('DeviceNumber: ' + str(self.output_device) + '    ChannelNumber: ' +
                              str(self.output_channel) + '    Name: ' + str(self.devices[self.output_device]['name']))
             sd.play(self.audio_data, self.fs, mapping=self.output_channel, device=self.output_device)
-            status = sd.wait()
-            sd.stop()
+            if not async_rec:
+                status = sd.wait()
+                sd.stop()
 
     # sets the file to play
     def set_audio_file(self, file_to_play):
@@ -68,50 +68,64 @@ class AudioPlayer():
         if not self.dummy:
             # DeviceNumber: 190    ChannelNumber: 1    Name: Analog (3+4) (Fireface Analog (3+4))
             if line_number == 0:
-                self.output_device = 190
+                #self.output_device = 190
+                self.output_device = 202
                 self.output_channel = 1
             # DeviceNumber: 190    ChannelNumber: 2    Name: Analog (3+4) (Fireface Analog (3+4))
             elif line_number == 1:
-                self.output_device = 190
+                #self.output_device = 190
+                self.output_device = 202
                 self.output_channel = 2
             #  DeviceNumber: 196    ChannelNumber: 1    Name: Analog (5+6) (Fireface Analog (5+6))
             elif line_number == 2:
-                self.output_device = 196
+                #self.output_device = 196
+                self.output_device = 208
                 self.output_channel = 1
             #  DeviceNumber: 196    ChannelNumber: 2    Name: Analog (5+6) (Fireface Analog (5+6))
             elif line_number == 3:
-                self.output_device = 196
+                #self.output_device = 196
+                self.output_device = 208
                 self.output_channel = 2
             # DeviceNumber: 202    ChannelNumber: 1    Name: Analog (7+8) (Fireface Analog (7+8))
             elif line_number == 4:
-                self.output_device = 202
+                #self.output_device = 202
+                self.output_device = 214
                 self.output_channel = 1
             elif line_number == 5:
-                self.output_device = 202
+                #self.output_device = 202
+                self.output_device = 214
                 self.output_channel = 2
             elif line_number == 6:
-                self.output_device = 206
+                #self.output_device = 206
+                self.output_device = 218
                 self.output_channel = 1
             elif line_number == 7:
-                self.output_device = 206
+                #self.output_device = 206
+                self.output_device = 218
                 self.output_channel = 2
             elif line_number == 8:
-                self.output_device = 166
+                #self.output_device = 166
+                self.output_device = 178
                 self.output_channel = 1
             elif line_number == 9:
-                self.output_device = 166
+                #self.output_device = 166
+                self.output_device = 178
                 self.output_channel = 2
             elif line_number == 10:
-                self.output_device = 172
+                #self.output_device = 172
+                self.output_device = 184
                 self.output_channel = 1
             elif line_number == 11:
-                self.output_device = 172
+                #self.output_device = 172
+                self.output_device = 184
                 self.output_channel = 2
             elif line_number == 12:
-                self.output_device = 178
+                #self.output_device = 178
+                self.output_device = 190
                 self.output_channel = 1
             elif line_number == 13:
-                self.output_device = 178
+                #self.output_device = 178
+                self.output_device = 190
                 self.output_channel = 2
             else:
                 self.output_device = 0
