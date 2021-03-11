@@ -13,9 +13,10 @@ from SyncedRecorder import SyncedRecorder
 import sounddevice as sd
 import soundfile as sf
 
-
+# specifies the folder of the audio files
 sound_folder = Path('audio')
 
+# specifies the audio files to play back
 rippled_noise_sound = sound_folder / 'inear_rippled_noise_400.0ms_1000_bandwidth.wav'
 white_noise_sound = sound_folder / 'inear_white_noise_400.0ms_1000_bandwidth.wav'
 
@@ -28,6 +29,7 @@ N_TRIALS = 100
 # Offset with which recording time is extended (in seconds)
 RECORDING_DURATION_OFFSET = 0.100
 
+# Just for testing
 dummy_audio_player = False
 dummy_arduino_reader = False
 
@@ -40,6 +42,7 @@ def clear_screen():
 
 
 def create_rand_balanced_order(n_items=2, n_trials=64):
+    """ This function creates a balanced order. Make sure that the input is correct!"""
     returnList = []
     availableItems = []
     trialsAlreadyAssignedToItem = [0] * n_items
@@ -118,13 +121,9 @@ def record_sounds(n_speakers, audio_player, results_path, user_id):
 
 
 def main():
-    #logger = logging.getLogger(__name__)
-
     # set path where the results are stored
     results_path = Path('./results_inear_exp/')
     results_path.mkdir(parents=False, exist_ok=True)
-
-    # print(type(results_path))
 
     # We have 2 conditions (monaural, binaural). In each condition, two different sounds are randomly played
     conditions = ['mono', 'bin']
@@ -137,19 +136,13 @@ def main():
     print(Fore.GREEN + 'Please enter participant id: ' + Style.RESET_ALL)
     user_id = input()
 
+    # create the path to the data file
     date = datetime.now()
     resultsFile = 'userid_' + user_id + '_date_' + date.strftime('%d.%m.%Y') + '_time_' + date.strftime('%H.%M') + '.csv'
     resultsStoredIn = results_path / resultsFile
 
-    # JUST TESTING #
-    # audio_player = AudioPlayer(dummy=dummy_audio_player)
-    # recording_data_path = record_sounds(N_SPEAKERS, audio_player=audio_player, results_path=results_path, user_id=user_id)
-    #    exit(0)
-    # file_to_play = '/home/oesst/ownCloud/PhD/Code/Python/vertical_localization_exp/results_inear_exp/participant_999/userid_999_speakerNum_0_soundType_rippled_.wav'
-    # data, fs = sf.read(file_to_play, dtype='int16')
-    # sd.play(data, fs)
-
-
+    # start by creating a new data file to store the data.
+    # data is stored continously, so in case of a crash the data is not lost.
     with open(resultsStoredIn.as_posix(), mode='w', newline='') as resFile:
 
         # create the file
@@ -165,18 +158,6 @@ def main():
             'reaction_time',  # time for participant to respond
             'user_id'   # id of the user
         ])
-
-        # # create empty dataframe with keys
-        # df = pd.DataFrame({
-        #     'trial': [],
-        #     'line number': [],
-        #     'speaker elevation': [],
-        #     'user estimate': [],
-        #     'sound type': [],
-        #     'condition': [],
-        #     'reaction time': [],
-        #     'user id': []
-        # })
 
         # Ask for dominant ear
         # left channel is 0, right channel is 1
@@ -194,6 +175,9 @@ def main():
         # Initialize Arduino Reader
         arduino_reader = ArduinoReader(port=ARDUINO_PORT, dummy=dummy_arduino_reader)
 
+        # Initialize the audio player
+        audio_player = AudioPlayer(dummy=dummy_audio_player)
+
         # Zeroing of the angle encoder
         print(Fore.RED + 'Confirm that the handle is in zero position (pointing upwards)' + Style.RESET_ALL)
         input()
@@ -205,12 +189,12 @@ def main():
         print(Back.RED + '########################################' + Style.RESET_ALL)
         print(Back.RED + '----------------------------------------' + Style.RESET_ALL)
         print(Back.RED + 'Recording of sounds will start whne participant presses button once' + Style.RESET_ALL)
-
+        # Wait for the participant to press button
         arduino_reader.get_data()
 
-        audio_player = AudioPlayer(dummy=dummy_audio_player)
-        #recording_data_path = record_sounds(N_SPEAKERS, audio_player=audio_player, results_path=results_path, user_id=user_id)
-        recording_data_path = results_path / ('participant_98')
+        # Start the recording process
+        recording_data_path = record_sounds(N_SPEAKERS, audio_player=audio_player, results_path=results_path, user_id=user_id)
+
         clear_screen()
         print(Back.GREEN + 'Recording successful!' + Style.RESET_ALL)
         input()
@@ -224,30 +208,21 @@ def main():
         print(Back.RED + '########################################' + Style.RESET_ALL)
         print(Back.RED + '----------------------------------------' + Style.RESET_ALL)
 
+        # walk over all conditions
         for i_cond, cond in enumerate(conditions):
 
             print(Fore.GREEN + 'The following condition is tested: ' + cond + '\n' + Style.RESET_ALL)
 
             print(Fore.GREEN + 'Participant starts experiment by pressing the button \n' + Style.RESET_ALL)
-
+            # wait for button press of participant
             arduino_reader.get_data()
-
-            ##### OLD RANDOM ORDER CREATION - WRONG #####
-            # create a randomized  but balanced list so that each sound is played equally often
-            # sound_order = create_rand_balanced_order(n_items=2, N_TRIALS=N_TRIALS)
-            #
-            # # create a randomized  but balanced list so that each speaker is used equally often
-            # speaker_order = create_rand_balanced_order(n_items=N_SPEAKERS, N_TRIALS=N_TRIALS)
-            ############################################
 
             # create tupels of all speakers with all sound types 10 speakers * 2 sounds = 20 tuples
             stimulus_sequence = [(i, j) for i in np.arange(N_SPEAKERS) for j in np.arange(2)]
-
+            # We need to walk over this sequence to ensure that we tested all speakers and sounds
             random_sequence = create_rand_balanced_order(n_items=N_SPEAKERS * 2, n_trials=N_TRIALS)
 
-            # print(speaker_order)
-            # exit(0)
-
+            # walk over random sequence
             for i_trial, i_tuple in enumerate(random_sequence):
 
                 # decode the stimulus sequence
@@ -262,11 +237,6 @@ def main():
                 file_name = 'userid_' + str(user_id) + '_speakerNum_' + str(num_speaker) + '_soundType_' + sound_type_name + '.wav'
                 file_to_play = recording_data_path / file_name
 
-                # check which condition we are in
-
-                # if cond == 'bin':
-                #     num_channels = 2
-
                 # Extract data and sampling rate from file
                 data, fs = sf.read(file_to_play, dtype='int16')
 
@@ -276,7 +246,6 @@ def main():
                     data[:, dominant_ear] = 0
 
                 sd.play(data, fs)
-                # status = sd.wait()  # Wait until file is done playing
 
                 # start measuring the time
                 ts = datetime.now()
@@ -284,7 +253,6 @@ def main():
                 # get participant response
                 print('Waiting for participant response...')
                 user_estimate = arduino_reader.get_data()
-                # print('Response is : '+ str(user_estimate))
 
                 # calculate reaction time
                 reaction_time = (datetime.now() - ts).total_seconds()
@@ -299,14 +267,13 @@ def main():
                     reaction_time,
                     user_id   # id of the user
                 ]
-
+                # write it to file
                 res_file_writer.writerow(result_item)
 
                 # wait some time until playing the next sound
                 time.sleep(0.5)
 
             print("First Condition is finished.")
-
 
 
 if __name__ == '__main__':
@@ -317,12 +284,5 @@ if __name__ == '__main__':
     init()
     # try:
     main()
-    # except KeyboardInterrupt:
-    #     deinit()
-    #     print(Fore.LIGHTGREEN_EX + '\nTerminated successfully' + Style.RESET_ALL)
-    # except Exception as ex:
-    #     deinit()
-    #     print(type(ex).__name__ + ': ' + str(ex))
-    #     exc_type, exc_obj, exc_tb = sys.exc_info()
-    #     print(exc_type, 'Line no: ' + exc_tb.tb_lineno)
+    # colorama deinitialization
     deinit()
